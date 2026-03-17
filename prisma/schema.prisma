@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+// update client `npx prisma generate`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  previewFeatures = ["logging"]
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+
+// 班级表
+model Class {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique @db.VarChar(50) // 如 "高一(1)班"
+  students Student[]
+  teachers TeacherClass[]
+}
+
+// 学生表
+model Student {
+  id      Int     @id @default(autoincrement())
+  sno     String  @unique @db.VarChar(20) // 学号
+  age     Int
+  gender  Gender
+  height  Float   // 单位 cm
+  classId Int
+  class   Class   @relation(fields: [classId], references: [id])
+}
+
+// 科目表
+model Subject {
+  id       Int            @id @default(autoincrement())
+  name     String         @unique @db.VarChar(50) // 如 "数学"
+  teachers TeacherSubject[]
+}
+
+// 教师表
+model Teacher {
+  id       Int            @id @default(autoincrement())
+  name     String         @db.VarChar(50)
+  subjects TeacherSubject[]
+  classes  TeacherClass[]
+}
+
+// 教师 <-> 科目 中间表
+model TeacherSubject {
+  teacherId Int
+  subjectId Int
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  @@id([teacherId, subjectId])
+}
+
+// 教师 <-> 班级 中间表
+model TeacherClass {
+  teacherId Int
+  classId   Int
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  class     Class   @relation(fields: [classId], references: [id])
+
+  @@id([teacherId, classId])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
